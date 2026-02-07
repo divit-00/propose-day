@@ -1,192 +1,119 @@
 // ================== CANVAS SETUP ==================
 const canvas = document.getElementById("starfield");
-const context = canvas.getContext("2d");
+const ctx = canvas.getContext("2d");
 
 canvas.width = window.innerWidth;
 canvas.height = window.innerHeight;
 
 // ================== STARS ==================
-const stars = 500;
-const colorrange = [0, 60, 240];
-const starArray = [];
+const STAR_COUNT = 500;
+const stars = [];
+const colors = [0, 60, 240];
 
-function getRandom(min, max) {
-  return Math.floor(Math.random() * (max - min + 1)) + min;
+function rand(min, max) {
+  return Math.random() * (max - min) + min;
 }
 
-for (let i = 0; i < stars; i++) {
-  starArray.push({
-    x: Math.random() * canvas.width,
-    y: Math.random() * canvas.height,
-    radius: Math.random() * 1.2,
-    hue: colorrange[getRandom(0, colorrange.length - 1)],
-    sat: getRandom(50, 100),
-    opacity: Math.random()
+for (let i = 0; i < STAR_COUNT; i++) {
+  stars.push({
+    x: rand(0, canvas.width),
+    y: rand(0, canvas.height),
+    r: Math.random() * 1.2,
+    o: Math.random(),
+    h: colors[Math.floor(Math.random() * colors.length)]
   });
 }
 
 function drawStars() {
-  for (let i = 0; i < stars; i++) {
-    const s = starArray[i];
-    context.beginPath();
-    context.arc(s.x, s.y, s.radius, 0, Math.PI * 2);
-    context.fillStyle = `hsla(${s.hue}, ${s.sat}%, 88%, ${s.opacity})`;
-    context.fill();
-  }
-}
-
-function updateStars() {
-  for (let i = 0; i < stars; i++) {
-    if (Math.random() > 0.99) {
-      starArray[i].opacity = Math.random();
-    }
-  }
-}
-
-// ================== TEXT CONTROL ==================
-let frameNumber = 0;
-let opacity = 0;
-let secondOpacity = 0;
-let thirdOpacity = 0;
-
-const FAST_TEXT_SPEED = 0.03;
-
-// ================== BUTTON ==================
-const button = document.getElementById("valentinesButton");
-let showYesMessage = false;
-let yesOpacity = 0;
-
-button.addEventListener("click", () => {
-  showYesMessage = true;
-  button.style.display = "none";
-});
-
-// ================== TEXT FUNCTIONS ==================
-function drawTextWithLineBreaks(lines, x, y, fontSize, lineHeight) {
-  lines.forEach((line, index) => {
-    context.fillText(line, x, y + index * (fontSize + lineHeight));
+  stars.forEach(s => {
+    ctx.beginPath();
+    ctx.arc(s.x, s.y, s.r, 0, Math.PI * 2);
+    ctx.fillStyle = `hsla(${s.h},80%,88%,${s.o})`;
+    ctx.fill();
   });
 }
 
+function twinkleStars() {
+  stars.forEach(s => {
+    if (Math.random() > 0.99) s.o = Math.random();
+  });
+}
+
+// ================== STATE CONTROL ==================
+let frame = 0;
+let opacity = 0;
+let proposalDone = false;
+let yesOpacity = 0;
+
+// ================== BUTTON ==================
+const button = document.getElementById("valentinesButton");
+
+button.addEventListener("click", () => {
+  proposalDone = true;
+  button.style.display = "none";
+});
+
+// ================== TEXT ==================
 function drawText() {
-  const fontSize = Math.min(30, window.innerWidth / 25);
-  const lineHeight = 8;
+  ctx.textAlign = "center";
+  ctx.font = "28px Comic Sans MS";
 
-  context.font = `${fontSize}px Comic Sans MS`;
-  context.textAlign = "center";
+  // 🛑 STOP OLD ANIMATION AFTER YES
+  if (proposalDone) {
+    if (yesOpacity < 1) yesOpacity += 0.05;
 
-  // --- TEXT 1 ---
-  if (frameNumber < 300) {
-    context.fillStyle = `rgba(255,255,255,${opacity})`;
-    context.fillText(
-      "everyday I cannot believe how lucky I am",
+    ctx.fillStyle = `rgba(255,105,180,${yesOpacity})`;
+    ctx.font = "42px Comic Sans MS";
+    ctx.fillText(
+      "She said YES! 💖✨",
       canvas.width / 2,
-      canvas.height / 2
-    );
-    opacity += 0.01;
-  }
-
-  if (frameNumber >= 300 && frameNumber < 600) {
-    context.fillStyle = `rgba(255,255,255,${opacity})`;
-    context.fillText(
-      "everyday I cannot believe how lucky I am",
-      canvas.width / 2,
-      canvas.height / 2
-    );
-    opacity -= 0.01;
-  }
-
-  if (frameNumber === 600) opacity = 0;
-
-  // --- TEXT 2 ---
-  if (frameNumber > 600 && frameNumber < 900) {
-    context.fillStyle = `rgba(255,255,255,${opacity})`;
-
-    if (window.innerWidth < 600) {
-      drawTextWithLineBreaks(
-        ["amongst trillions and trillions of stars,", "over billions of years"],
-        canvas.width / 2,
-        canvas.height / 2,
-        fontSize,
-        lineHeight
-      );
-    } else {
-      context.fillText(
-        "amongst trillions and trillions of stars, over billions of years",
-        canvas.width / 2,
-        canvas.height / 2
-      );
-    }
-    opacity += 0.01;
-  }
-
-  if (frameNumber >= 900 && frameNumber < 1200) {
-    context.fillStyle = `rgba(255,255,255,${opacity})`;
-    opacity -= 0.01;
-  }
-
-  if (frameNumber === 1200) opacity = 0;
-
-  // --- TEXT 3 ---
-  if (frameNumber > 1200 && frameNumber < 1500) {
-    context.fillStyle = `rgba(255,255,255,${opacity})`;
-    context.fillText(
-      "to be alive, and to get to spend this life with you",
-      canvas.width / 2,
-      canvas.height / 2
-    );
-    opacity += 0.01;
-  }
-
-  if (frameNumber >= 1500 && frameNumber < 1800) {
-    context.fillStyle = `rgba(255,255,255,${opacity})`;
-    opacity -= 0.01;
-  }
-
-  if (frameNumber === 1800) opacity = 0;
-
-  // --- FINAL LOVE TEXT ---
-  if (frameNumber > 1800) {
-    context.fillStyle = `rgba(255,255,255,${thirdOpacity})`;
-    context.fillText(
-      "Will You Be Mine?",
-      canvas.width / 2,
-      canvas.height / 2 + 80
-    );
-    if (thirdOpacity < 1) thirdOpacity += 0.01;
-    button.style.display = "block";
-  }
-
-  // ================== YES MESSAGE ==================
-  if (showYesMessage) {
-    if (yesOpacity < 1) yesOpacity += FAST_TEXT_SPEED;
-
-    context.fillStyle = `rgba(255,105,180,${yesOpacity})`;
-    context.font = "40px Comic Sans MS";
-
-    context.fillText(
-      "She said YES! 💖",
-      canvas.width / 2,
-      canvas.height / 2 + 200
+      canvas.height / 2 + 40
     );
 
-    context.font = "28px Comic Sans MS";
-    context.fillText(
+    ctx.font = "28px Comic Sans MS";
+    ctx.fillText(
       "This is the beginning of our forever ✨",
       canvas.width / 2,
-      canvas.height / 2 + 250
+      canvas.height / 2 + 95
     );
+
+    return; // ⛔ prevents overwrite
+  }
+
+  // ================== NORMAL SEQUENCE ==================
+  if (frame < 240) {
+    opacity += 0.01;
+    ctx.fillStyle = `rgba(255,255,255,${opacity})`;
+    ctx.fillText(
+      "everyday I cannot believe how lucky I am",
+      canvas.width / 2,
+      canvas.height / 2
+    );
+  } 
+  else if (frame < 480) {
+    opacity -= 0.01;
+  } 
+  else if (frame === 480) {
+    opacity = 0;
+  } 
+  else if (frame > 480) {
+    ctx.fillStyle = "white";
+    ctx.fillText(
+      "Will You Be Mine?",
+      canvas.width / 2,
+      canvas.height / 2
+    );
+    button.style.display = "block";
   }
 }
 
-// ================== MAIN LOOP ==================
+// ================== LOOP ==================
 function animate() {
-  context.clearRect(0, 0, canvas.width, canvas.height);
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
   drawStars();
-  updateStars();
+  twinkleStars();
   drawText();
-
-  frameNumber++;
+  frame++;
   requestAnimationFrame(animate);
 }
 
