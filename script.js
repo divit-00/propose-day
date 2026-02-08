@@ -84,7 +84,7 @@ function drawText() {
     ctx.fillStyle = `rgba(255,105,180,${yesOpacity})`;
     ctx.font = "42px Comic Sans MS";
     ctx.fillText(
-      "She said YES! 💖✨",
+      "I LOVE YOU! 💖✨",
       canvas.width / 2,
       canvas.height / 2 + 20
     );
