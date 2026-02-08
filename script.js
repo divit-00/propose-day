@@ -1,4 +1,4 @@
-// ================== CANVAS SETUP ==================
+// ===== CANVAS =====
 const canvas = document.getElementById("starfield");
 const ctx = canvas.getContext("2d");
 
@@ -7,61 +7,77 @@ function resizeCanvas() {
   canvas.height = window.innerHeight;
 }
 resizeCanvas();
+window.addEventListener("resize", resizeCanvas);
 
-// ================== STARS ==================
+// ===== STARS =====
 const STAR_COUNT = 500;
 const stars = [];
 const colors = [0, 60, 240];
 
-function rand(min, max) {
-  return Math.random() * (max - min) + min;
-}
-
 for (let i = 0; i < STAR_COUNT; i++) {
   stars.push({
-    x: rand(0, canvas.width),
-    y: rand(0, canvas.height),
+    x: Math.random() * canvas.width,
+    y: Math.random() * canvas.height,
     r: Math.random() * 1.2,
-    o: Math.random(),
+    a: Math.random(),
     h: colors[Math.floor(Math.random() * colors.length)]
   });
 }
 
 function drawStars() {
   stars.forEach(s => {
+    if (Math.random() > 0.99) s.a = Math.random();
+
     ctx.beginPath();
     ctx.arc(s.x, s.y, s.r, 0, Math.PI * 2);
-    ctx.fillStyle = `hsla(${s.h},80%,88%,${s.o})`;
+    ctx.fillStyle = `hsla(${s.h},80%,88%,${s.a})`;
     ctx.fill();
   });
 }
 
-function twinkleStars() {
-  stars.forEach(s => {
-    if (Math.random() > 0.99) s.o = Math.random();
-  });
-}
+// ===== MESSAGES =====
+const messages = [
+  "Every day I cannot believe how lucky I am",
+  "Amongst trillions of stars,\nover billions of years",
+  "To be alive,\nand to spend this life with you",
+  "Is so incredibly,\nunfathomably unlikely",
+  "And yet here I am,\ngetting the impossible chance",
+  "I love you more than\nspace and time can contain",
+  "And I can’t wait to spend forever\nsharing that love with you"
+];
 
-// ================== STATE ==================
-let frame = 0;
-let opacity = 0;
-let proposalDone = false;
-let yesOpacity = 0;
+let msgIndex = 0;
+let textOpacity = 0;
+let fadingIn = true;
 
-// ================== BUTTON ==================
+// change message every 4.5 seconds
+setInterval(() => {
+  if (msgIndex < messages.length - 1) {
+    msgIndex++;
+    textOpacity = 0;
+    fadingIn = true;
+  }
+}, 4500);
+
+// ===== BUTTON =====
 const button = document.getElementById("valentinesButton");
 button.style.display = "none";
+
+let proposalDone = false;
+let yesOpacity = 0;
 
 button.addEventListener("click", () => {
   proposalDone = true;
   button.style.display = "none";
 });
 
-// ================== TEXT ==================
+// ===== DRAW TEXT =====
 function drawText() {
   ctx.textAlign = "center";
+  const fontSize = window.innerWidth < 600 ? 22 : 28;
+  ctx.font = `${fontSize}px Comic Sans MS`;
 
-  // ❤️ AFTER YES CLICK
+  // 💖 AFTER YES
   if (proposalDone) {
     yesOpacity = Math.min(1, yesOpacity + 0.05);
 
@@ -70,66 +86,56 @@ function drawText() {
     ctx.fillText(
       "She said YES! 💖✨",
       canvas.width / 2,
-      canvas.height / 2 + 30
+      canvas.height / 2 + 20
     );
 
     ctx.font = "28px Comic Sans MS";
     ctx.fillText(
       "This is the beginning of our forever ✨",
       canvas.width / 2,
-      canvas.height / 2 + 80
+      canvas.height / 2 + 75
     );
     return;
   }
 
-  // 💬 FIRST MESSAGE
-  if (frame < 240) {
-    opacity = Math.min(1, opacity + 0.01);
-    ctx.fillStyle = `rgba(255,255,255,${opacity})`;
-    ctx.font = "28px Comic Sans MS";
+  // 💬 NORMAL MESSAGE FLOW
+  ctx.fillStyle = `rgba(255,255,255,${textOpacity})`;
+
+  const lines = messages[msgIndex].split("\n");
+  const lineHeight = fontSize + 6;
+  const startY = canvas.height / 2 - (lines.length - 1) * lineHeight / 2;
+
+  lines.forEach((line, i) => {
     ctx.fillText(
-      "everyday I cannot believe how lucky I am",
+      line,
       canvas.width / 2,
-      canvas.height / 2
+      startY + i * lineHeight
     );
+  });
+
+  if (fadingIn) {
+    textOpacity += 0.02;
+    if (textOpacity >= 1) fadingIn = false;
   }
 
-  // 💬 HOLD MESSAGE
-  else if (frame < 360) {
-    ctx.fillStyle = "white";
-    ctx.font = "28px Comic Sans MS";
-    ctx.fillText(
-      "everyday I cannot believe how lucky I am",
-      canvas.width / 2,
-      canvas.height / 2
-    );
-  }
-
-  // 💍 FINAL QUESTION + BUTTON
-  else {
-    ctx.fillStyle = "white";
+  // 💍 FINAL QUESTION
+  if (msgIndex === messages.length - 1) {
     ctx.font = "32px Comic Sans MS";
     ctx.fillText(
       "Will You Be Mine?",
       canvas.width / 2,
-      canvas.height / 2
+      canvas.height / 2 + 120
     );
     button.style.display = "block";
   }
 }
 
-// ================== LOOP ==================
+// ===== ANIMATION LOOP =====
 function animate() {
   ctx.clearRect(0, 0, canvas.width, canvas.height);
   drawStars();
-  twinkleStars();
   drawText();
-  frame++;
   requestAnimationFrame(animate);
 }
 
-// ================== RESIZE ==================
-window.addEventListener("resize", resizeCanvas);
-
-// ================== START ==================
 animate();
